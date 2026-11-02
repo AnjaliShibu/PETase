@@ -1,0 +1,14 @@
+{
+  "device": "petase-reactor-01",
+  "mutant": "AI Mutant-v4",
+  "sequence": "NTPAAASRDLIVGGAHEDGV",
+  "tm_c": 61.2,
+  "setpoint_c": 60.0,
+  "heater": true,
+  "stir_rpm": 250,
+  "pet_load_g_per_l": 50.0,
+  "volume_l": 1.0,
+  "dg_kcal_mol": -8.3,
+  "rmsf_angstrom": 1.09,
+  "sim_conversion_pct": 69.22
+}

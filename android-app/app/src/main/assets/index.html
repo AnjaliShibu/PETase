@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>PETase AI Bio-Hub</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#020617;--card:#0f172a;--card2:#111827;--line:#1e293b;--tx:#f1f5f9;--mut:#94a3b8;--em:#10b981;--em2:#34d399;--cy:#22d3ee;--am:#fbbf24;--rd:#f87171}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+#app{max-width:440px;height:100%;margin:0 auto;display:flex;flex-direction:column;background:var(--card);position:relative}
+header{padding:calc(10px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:15px;margin:0;font-weight:800}header small{font-size:10px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.pill{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid #065f46;background:#022c22;color:var(--em2)}
+.pill.off{border-color:#7f1d1d;background:#2a0a0a;color:var(--rd)}
+main{flex:1;overflow-y:auto;padding:12px 12px 90px}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
+.card h3{margin:0 0 2px;font-size:14px}.sub{font-size:11px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.m .l{font-size:11px;color:var(--mut)}.m .v{font-size:22px;font-weight:800;margin-top:2px}.m .n{font-size:10px;color:var(--mut);margin-top:2px}
+.bar{height:6px;background:var(--line);border-radius:9px;margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--em2);transition:width .3s}
+.ok{color:var(--em2)}.warn{color:var(--am)}.bad{color:var(--rd)}.cy{color:var(--cy)}
+button,.btn{font:inherit;font-size:13px;font-weight:700;border:0;border-radius:11px;padding:10px 12px;cursor:pointer;background:var(--em);color:#022c22}
+button.sec{background:#1e293b;color:var(--tx);border:1px solid #334155}
+button.sm{padding:6px 10px;font-size:12px}
+button.on{outline:2px solid var(--em2)}
+button:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0}
+.row>*{min-width:0}
+input[type=range]{width:100%;accent-color:var(--em2)}
+input[type=number],input[type=text],textarea,select{width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:13px}
+textarea{font-family:ui-monospace,Menlo,monospace;min-height:64px;resize:vertical;text-transform:uppercase}
+label.f{display:block;font-size:11px;color:var(--mut);margin-bottom:3px}
+.sw{position:relative;width:46px;height:26px;flex:none}.sw input{opacity:0;width:100%;height:100%;position:absolute;margin:0}
+.sw span{position:absolute;inset:0;background:#334155;border-radius:99px;transition:.2s}.sw span:before{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw input:checked+span{background:var(--em)}.sw input:checked+span:before{transform:translateX(20px)}
+canvas{width:100%;display:block}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{flex:1 1 30%;padding:8px 4px;font-size:12px}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;line-height:1.55}
+.rep{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}
+.note{font-size:11px;color:var(--mut);line-height:1.5}
+video{width:100%;border-radius:12px;background:#000;max-height:260px;object-fit:cover}
+nav{position:absolute;left:0;right:0;bottom:0;display:flex;background:rgba(15,23,42,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;color:var(--mut);border-radius:0;padding:9px 0 7px;font-size:10px}
+nav button b{display:block;font-size:19px;line-height:1.1}
+nav button.on{color:var(--em2);outline:0}
+#toast{position:absolute;left:12px;right:12px;top:64px;background:var(--em);color:#022c22;font-size:12px;font-weight:700;padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(-14px);transition:.25s;pointer-events:none;z-index:9}
+#toast.on{opacity:1;transform:none}#toast.err{background:var(--rd);color:#2a0a0a}
+.hist{display:flex;justify-content:space-between;font-size:11px;padding:6px 0;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div><small>Enzyme OS v3.0 · prototype</small><h1>PETase AI Bio-Hub</h1></div>
+  <span id="netpill" class="pill">simulation</span>
+</header>
+<div id="toast"><span id="toastmsg"></span></div>
+
+<main>
+<!-- ============ DASHBOARD ============ -->
+<section id="v-dash" class="view on">
+  <div class="card">
+    <div class="row" style="margin-top:0"><div><h3>Stir-Reactor #01</h3><div class="sub">Live simulation · edit anything below</div></div>
+      <span id="d-variant" class="pill mono">Mutant-v4</span></div>
+    <div class="grid">
+      <div class="m"><div class="l">Temp °C (set <span id="d-set">60</span>)</div><div class="v mono" id="d-temp">25.0</div><div class="bar"><i id="d-tbar" style="width:40%"></i></div></div>
+      <div class="m"><div class="l">Conversion</div><div class="v mono ok" id="d-conv">0.0%</div><div class="bar"><i id="d-cbar" style="width:0"></i></div><div class="n" id="d-ideal">ideal 24 h: –</div></div>
+      <div class="m"><div class="l">Sim time</div><div class="v mono" id="d-time">0.0 h</div><div class="n" id="d-tpa">TPA released 0.00 g</div></div>
+      <div class="m"><div class="l">Enzyme state</div><div class="v" style="font-size:15px" id="d-state">–</div><div class="n" id="d-margin">–</div></div>
+    </div>
+    <div class="row" style="margin-bottom:0">
+      <button id="b-run" style="flex:2">▶ Start run</button>
+      <button id="b-reset" class="sec" style="flex:1">Reset</button>
+    </div>
+    <div class="row" style="margin-bottom:0"><span class="sub">Sim speed</span>
+      <div class="seg" style="flex:1" id="speed"><button class="sec sm" data-s="1">1 h/s</button><button class="sec sm on" data-s="4">4 h/s</button><button class="sec sm" data-s="12">12 h/s</button></div></div>
+  </div>
+
+  <div class="card">
+    <h3>Depolymerisation kinetics</h3><div class="sub">Conversion of PET → monomers vs time</div>
+    <canvas id="chart" height="190"></canvas>
+    <div class="note" id="legend"></div>
+  </div>
+
+  <div class="card">
+    <h3>Reactor controls</h3>
+    <div class="row"><div><b style="font-size:13px">Heating element</b><div class="sub">Temp relaxes to set-point (τ≈1.3 h), else to 25 °C</div></div>
+      <label class="sw"><input type="checkbox" id="c-heat" checked><span></span></label></div>
+    <label class="f">Set-point: <b id="c-set-l" class="mono">60.0 °C</b></label>
+    <input type="range" id="c-set" min="30" max="75" step="0.5" value="60">
+    <label class="f" style="margin-top:8px">Stir speed: <b id="c-rpm-l" class="mono">250 RPM</b></label>
+    <input type="range" id="c-rpm" min="50" max="500" step="10" value="250">
+    <div class="grid" style="margin-top:8px">
+      <div><label class="f">PET load (g/L)</label><input type="number" id="c-load" value="50" min="1" max="200" step="1"></div>
+      <div><label class="f">Volume (L)</label><input type="number" id="c-vol" value="1" min="0.1" max="50" step="0.1"></div>
+    </div>
+    <div class="row"><div><b style="font-size:13px">AOX1 methanol feed</b><div class="sub">Production phase · fed <span id="c-feeds">0</span>×</div></div>
+      <button id="b-feed" class="sm">Feed 5 mL</button></div>
+    <div class="note">Typical <i>Pichia</i> AOX1 induction uses roughly 0.5–1 % v/v methanol about every 24 h — follow your own protocol; the feed here is logged, not modelled.</div>
+  </div>
+
+  <div class="card">
+    <h3>Variant in reactor</h3>
+    <div class="seg" id="variant"><button class="sec sm on" data-v="MUT4">AI Mutant-v4</button><button class="sec sm" data-v="WT">Wild-type</button><button class="sec sm" data-v="CUSTOM">Custom</button></div>
+    <div class="note" style="margin-top:6px" id="variant-note"></div>
+  </div>
+</section>
+
+<!-- ============ SCANNER ============ -->
+<section id="v-scan" class="view">
+  <div class="card">
+    <h3>Plastic scanner</h3><div class="sub">Camera capture + recycling-code confirmation</div>
+    <div style="margin-top:8px"><video id="cam" playsinline muted></video><canvas id="snap" style="display:none"></canvas></div>
+    <div class="row"><button id="b-cam" style="flex:1">📷 Start camera</button><button id="b-snap" class="sec" style="flex:1" disabled>Capture frame</button></div>
+    <div class="note" id="cam-note">The camera helps you photograph the item and read its ♻ number. Automatic resin recognition is <b>not</b> implemented — choose the code below.</div>
+  </div>
+  <div class="card">
+    <h3>Resin code</h3>
+    <div class="chips" id="resin"></div>
+    <label class="f" style="margin-top:10px">Item weight (g)</label>
+    <input type="number" id="s-weight" value="35" min="1" step="1">
+    <label class="f" style="margin-top:8px">Enzyme dose assumption (mg per g PET)</label>
+    <input type="number" id="s-dose" value="0.034" min="0.001" step="0.001">
+    <div class="note">0.034 mg/g is the value implied by your original card (1.2 mg for 35 g). Replace it with your measured loading.</div>
+  </div>
+  <div class="card" id="scan-out"></div>
+</section>
+
+<!-- ============ MUTATOR ============ -->
+<section id="v-mut" class="view">
+  <div class="card">
+    <h3>Sequence analyser</h3><div class="sub">Computed from the sequence — no mock numbers</div>
+    <label class="f" style="margin-top:8px">Amino-acid sequence (one-letter code)</label>
+    <textarea id="m-seq" spellcheck="false" autocapitalize="characters"></textarea>
+    <div class="seg" style="margin-top:6px"><button class="sec sm" id="m-wt">Load wild-type</button><button class="sec sm" id="m-mut">Load Mutant-v4</button><button class="sec sm" id="m-file">Import FASTA…</button></div>
+    <div id="m-warn" class="note bad"></div>
+    <div class="grid" style="margin-top:10px" id="m-props"></div>
+    <div class="m" style="margin-top:8px"><div class="l">Substitutions vs wild-type fragment</div><div class="mono" id="m-diff" style="font-size:13px;margin-top:4px;word-break:break-word">–</div></div>
+  </div>
+  <div class="card">
+    <h3>Model outputs you supply</h3>
+    <div class="sub">Paste values from your ESM-2 / stability notebook. This app does not run ESM-2 on the phone.</div>
+    <div class="grid" style="margin-top:8px">
+      <div><label class="f">Predicted Tm (°C)</label><input type="number" id="m-tm" step="0.1"></div>
+      <div><label class="f">Binding ΔG (kcal/mol)</label><input type="number" id="m-dg" step="0.1"></div>
+      <div><label class="f">Relative activity (0–2)</label><input type="number" id="m-act" step="0.05"></div>
+      <div><label class="f">Avg RMSF (Å)</label><input type="number" id="m-rmsf" step="0.01"></div>
+    </div>
+    <div id="m-tm-flag" class="note" style="margin-top:8px"></div>
+    <button id="m-use" style="width:100%;margin-top:8px">Use in reactor</button>
+    <div class="note" style="margin-top:8px">The catalytic triad (Ser160, Asp206, His237 in full-length IsPETase) is <b>not</b> inside this 20-aa demo fragment; a real run needs the full ≈ 290-aa sequence.</div>
+  </div>
+  <div class="card">
+    <h3>Tm vs reactor temperature</h3><canvas id="tmchart" height="150"></canvas>
+    <div class="note">Relative activity as the reactor temperature moves around the enzyme's Tm (model assumption: full activity ≤ Tm, exponential loss above).</div>
+  </div>
+</section>
+
+<!-- ============ TELEMETRY ============ -->
+<section id="v-tel" class="view">
+  <div class="card">
+    <h3>Pipeline report</h3><div class="sub" id="t-sub">Simulation output</div>
+    <div class="seg" id="t-badges" style="margin:8px 0"></div>
+    <div class="rep mono"><pre id="t-rep"></pre></div>
+  </div>
+  <div class="card">
+    <h3>Export &amp; share</h3>
+    <div class="seg"><button id="x-fasta" class="sm">FASTA</button><button id="x-csv" class="sm">Run CSV</button><button id="x-json" class="sm">Config JSON</button></div>
+    <div class="seg" style="margin-top:6px"><button id="x-share" class="sec sm">Share report</button><button id="x-save" class="sec sm">Save run</button><button id="x-import" class="sec sm">Import file…</button></div>
+    <div class="note" style="margin-top:6px">Import accepts .fasta (sequence), .json (config) and .csv (overlay on the chart: hour,temp_c,conversion_pct).</div>
+  </div>
+  <div class="card">
+    <h3>Push to IoT reactor</h3><div class="sub">Sends the JSON config with an HTTP POST (e.g. an ESP32 on your Wi-Fi)</div>
+    <label class="f" style="margin-top:8px">Device URL</label>
+    <input type="text" id="iot-url" placeholder="http://192.168.1.50/config" inputmode="url">
+    <button id="x-push" style="width:100%;margin-top:8px">Push config</button>
+    <div class="note" id="iot-out" style="margin-top:6px"></div>
+  </div>
+  <div class="card"><h3>Saved runs</h3><div id="hist" class="note">No saved runs yet.</div></div>
+</section>
+</main>
+
+<nav>
+  <button data-t="dash" class="on"><b>📊</b>Reactor</button>
+  <button data-t="scan"><b>📷</b>Scanner</button>
+  <button data-t="mut"><b>🧬</b>Mutator</button>
+  <button data-t="tel"><b>📄</b>Report</button>
+</nav>
+</div>
+<input type="file" id="file" style="display:none" accept=".fasta,.fa,.faa,.txt,.json,.csv,text/plain,application/json,text/csv">
+
+<script>
+"use strict";
+// ================================================================
+// MODEL-START  (identical maths to pipeline/petase_step9.py)
+// ================================================================
+const C = {K0:0.045, TREF:55, XCAP:95.2, PET_UNIT:192.17, TPA:166.13};
+const stabilityFactor = (T,tm) => T<=tm ? 1 : Math.exp(-(T-tm)/3);
+const stirFactor = rpm => Math.min(1, Math.sqrt(Math.max(rpm,0)/200));
+const rateConst = (T,tm,act,rpm) => C.K0*(T/C.TREF)*act*stirFactor(rpm)*stabilityFactor(T,tm);
+const idealConv = (t,T,tm,act,rpm) => Math.min(100*(1-Math.exp(-rateConst(T,tm,act,rpm)*t)), C.XCAP);
+const tpaGrams = (loadGL,volL,X) => loadGL*volL*X/100*C.TPA/C.PET_UNIT;
+// MODEL-END
+
+const AA = "ACDEFGHIKLMNPQRSTVWY";
+const MASS = {G:57.0519,A:71.0788,S:87.0782,P:97.1167,V:99.1326,T:101.1051,C:103.1388,L:113.1594,I:113.1594,N:114.1038,D:115.0886,Q:128.1307,K:128.1741,E:129.1155,M:131.1926,H:137.1411,F:147.1766,R:156.1875,Y:163.1760,W:186.2132};
+const KD = {A:1.8,R:-4.5,N:-3.5,D:-3.5,C:2.5,Q:-3.5,E:-3.5,G:-0.4,H:-3.2,I:4.5,L:3.8,K:-3.9,M:1.9,F:2.8,P:-1.6,S:-0.8,T:-0.7,W:-0.9,Y:-1.3,V:4.2};
+const WT_SEQ = "NTPMSVSDKLIVLGAHEDGV", MUT_SEQ = "NTPAAASRDLIVGGAHEDGV";
+const PRESET = {
+  MUT4:{name:"AI Mutant-v4", seq:MUT_SEQ, tm:61.2, dg:-8.3, act:1.0, rmsf:1.09},
+  WT:{name:"Wild-type IsPETase (fragment)", seq:WT_SEQ, tm:47.0, dg:-5.1, act:0.3, rmsf:1.45}
+};
+const RESINS = [[1,"PET"],[2,"HDPE"],[3,"PVC"],[4,"LDPE"],[5,"PP"],[6,"PS"],[7,"Other"]];
+
+// ---------------- state ----------------
+const $ = id => document.getElementById(id);
+const S = {
+  variant:"MUT4", seq:MUT_SEQ, tm:61.2, dg:-8.3, act:1.0, rmsf:1.09,
+  tset:60, heater:true, rpm:250, load:50, vol:1, feeds:0, speed:4,
+  resin:1, weight:35, dose:0.034, url:"",
+  sim:{running:false,t:0,T:25,X:0,log:[],events:[]}, imported:null, camStream:null
+};
+function loadPrefs(){ try{ const p=JSON.parse(localStorage.getItem("petase.prefs")||"{}"); Object.assign(S,p);}catch(e){} }
+function savePrefs(){ try{ const {variant,seq,tm,dg,act,rmsf,tset,heater,rpm,load,vol,speed,resin,weight,dose,url}=S;
+  localStorage.setItem("petase.prefs",JSON.stringify({variant,seq,tm,dg,act,rmsf,tset,heater,rpm,load,vol,speed,resin,weight,dose,url}));}catch(e){} }
+
+// ---------------- helpers ----------------
+let toastT;
+function toast(msg,err){ const t=$("toast"); $("toastmsg").textContent=msg; t.className=(err?"err ":"")+"on"; clearTimeout(toastT); toastT=setTimeout(()=>t.className="",2600); }
+const fmt=(x,d=1)=>Number(x).toFixed(d);
+const native = typeof window.AndroidBridge !== "undefined";
+if(native){ $("netpill").textContent="Android app"; }
+
+function saveFile(name,mime,text){
+  if(native){ const r=window.AndroidBridge.saveFile(name,mime,text); if(String(r).startsWith("ERROR")) toast(r,true); else toast("Saved to "+r); return; }
+  const blob=new Blob([text],{type:mime}), url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500); toast("Downloaded "+name);
+}
+
+// ---------------- navigation ----------------
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+b.dataset.t));
+  if(b.dataset.t==="mut") drawTm(); if(b.dataset.t==="dash") drawChart(); if(b.dataset.t==="tel") renderReport();
+  if(b.dataset.t!=="scan") stopCam();
+});
+
+// ---------------- chart ----------------
+function plot(cv,series,o){
+  const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=+cv.getAttribute("height");
+  if(!w) return; cv.width=w*dpr; cv.height=h*dpr; const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  const L=34,R=8,Tp=8,B=22,pw=w-L-R,ph=h-Tp-B, X=x=>L+(x-o.x0)/(o.x1-o.x0)*pw, Y=y=>Tp+ph-(y-o.y0)/(o.y1-o.y0)*ph;
+  g.font="10px system-ui"; g.fillStyle="#64748b"; g.strokeStyle="#1e293b"; g.lineWidth=1;
+  for(let i=0;i<=4;i++){ const v=o.y0+(o.y1-o.y0)*i/4, y=Y(v); g.beginPath(); g.moveTo(L,y); g.lineTo(w-R,y); g.stroke(); g.textAlign="right"; g.fillText(Math.round(v),L-4,y+3); }
+  for(let i=0;i<=6;i++){ const v=o.x0+(o.x1-o.x0)*i/6; g.textAlign="center"; g.fillText(Math.round(v*10)/10+o.xs,X(v),h-6); }
+  series.forEach(s=>{ if(!s.pts.length) return; g.strokeStyle=s.c; g.lineWidth=s.w||2; g.setLineDash(s.d||[]); g.beginPath(); s.pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]))); g.stroke(); g.setLineDash([]); });
+  if(o.vline!=null){ g.strokeStyle="#fbbf24"; g.setLineDash([4,4]); g.beginPath(); g.moveTo(X(o.vline),Tp); g.lineTo(X(o.vline),Tp+ph); g.stroke(); g.setLineDash([]); g.fillStyle="#fbbf24"; g.textAlign="left"; g.fillText("Tm",X(o.vline)+3,Tp+10); }
+}
+function curve(f,x0,x1,n=48){ const a=[]; for(let i=0;i<=n;i++){ const x=x0+(x1-x0)*i/n; a.push([x,f(x)]); } return a; }
+function drawChart(){
+  const wt=PRESET.WT, cur={tm:S.tm,act:S.act};
+  const series=[
+    {c:"#10b981",w:2.5,pts:curve(t=>idealConv(t,S.tset,S.tm,S.act,S.rpm),0,24)},
+    {c:"#64748b",w:2,d:[5,5],pts:curve(t=>idealConv(t,37,wt.tm,wt.act,250),0,24)},
+    {c:"#22d3ee",w:2.5,pts:S.sim.log.map(p=>[p.h,p.X])}
+  ];
+  if(S.imported) series.push({c:"#fbbf24",w:2,d:[2,3],pts:S.imported});
+  plot($("chart"),series,{x0:0,x1:24,y0:0,y1:100,xs:"h"});
+  $("legend").innerHTML='<span class="ok">━</span> ideal at set-point &nbsp;<span style="color:#64748b">┅</span> wild-type @37 °C &nbsp;<span class="cy">━</span> live run'+(S.imported?' &nbsp;<span class="warn">┅</span> imported CSV':'');
+}
+function drawTm(){
+  const pts=curve(T=>100*stabilityFactor(T,S.tm),30,75,90);
+  plot($("tmchart"),[{c:"#10b981",w:2.5,pts},{c:"#ef4444",w:1.5,d:[3,3],pts:[[S.tset,0],[S.tset,100]]}],{x0:30,x1:75,y0:0,y1:100,xs:"°",vline:S.tm});
+}
+
+// ---------------- reactor simulation ----------------
+function margin(){ return S.tm - S.tset; }
+function enzymeState(){ const m=margin(); return m>=3?["Stable","ok","Tm margin "+fmt(m)+" °C"]: m>=0?["Marginal","warn","Tm margin only "+fmt(m)+" °C"]:["Denaturing","bad","Set-point "+fmt(-m)+" °C above Tm"]; }
+function updateDash(){
+  const s=S.sim, X=s.X, ideal=idealConv(24,S.tset,S.tm,S.act,S.rpm), st=enzymeState();
+  $("d-set").textContent=fmt(S.tset); $("d-temp").textContent=fmt(s.T); $("d-tbar").style.width=Math.min(100,(s.T-20)/60*100)+"%";
+  $("d-conv").textContent=fmt(X)+"%"; $("d-cbar").style.width=X+"%"; $("d-ideal").textContent="ideal 24 h: "+fmt(ideal)+"%";
+  $("d-time").textContent=fmt(s.t)+" h"; $("d-tpa").textContent="TPA released "+fmt(tpaGrams(S.load,S.vol,X),2)+" g";
+  const e=$("d-state"); e.textContent=st[0]; e.className="v "+st[1]; e.style.fontSize="15px"; $("d-margin").textContent=st[2];
+  $("c-feeds").textContent=S.feeds; $("d-variant").textContent=S.variant==="CUSTOM"?"Custom":PRESET[S.variant].name.replace("AI ","").replace(" IsPETase (fragment)","");
+  $("variant-note").textContent=`Tm ${fmt(S.tm)} °C · relative activity ${S.act} · ${S.seq.length} aa`;
+  $("b-run").textContent=s.running?"⏸ Pause":(s.t>0&&s.t<24?"▶ Resume":"▶ Start run");
+  drawChart();
+}
+function step(dtH){
+  const s=S.sim, n=Math.max(1,Math.ceil(dtH/0.05)), h=dtH/n;
+  for(let i=0;i<n;i++){
+    const target=S.heater?S.tset:25; s.T+= (target-s.T)*(1-Math.exp(-h/1.3));
+    const k=rateConst(s.T,S.tm,S.act,S.rpm); s.X=Math.min(C.XCAP, s.X + k*(100-s.X)*h);
+    s.t+=h;
+    if(Math.floor(s.t+1e-9)>Math.floor(s.t-h+1e-9)||s.log.length===0){ logPoint(); }
+  }
+}
+function logPoint(){ const s=S.sim; const hh=s.log.length? Math.round(s.t):0; if(s.log.length && s.log[s.log.length-1].h===hh) return;
+  s.log.push({h:hh,T:s.T,X:s.X,rpm:S.rpm,heater:S.heater?1:0,ev:s.events.splice(0).join(";")}); }
+let timer=null;
+function runLoop(){
+  clearInterval(timer); timer=setInterval(()=>{ const s=S.sim;
+    step(S.speed*0.2); if(s.t>=24){ s.t=24; s.running=false; clearInterval(timer); logPoint(); toast("Run complete: "+fmt(s.X)+"% conversion"); }
+    updateDash(); },200);
+}
+$("b-run").onclick=()=>{ const s=S.sim; if(s.t>=24) resetSim(); s.running=!s.running; if(s.running){ if(!s.log.length) logPoint(); runLoop(); } else clearInterval(timer); updateDash(); };
+function resetSim(){ clearInterval(timer); S.sim={running:false,t:0,T:25,X:0,log:[],events:[]}; updateDash(); }
+$("b-reset").onclick=resetSim;
+document.querySelectorAll("#speed button").forEach(b=>b.onclick=()=>{ S.speed=+b.dataset.s; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x===b)); savePrefs(); });
+
+$("c-heat").onchange=e=>{ S.heater=e.target.checked; S.sim.events.push(S.heater?"heater_on":"heater_off"); toast(S.heater?"Heater on":"Heater off — cooling to 25 °C"); savePrefs(); updateDash(); };
+$("c-set").oninput=e=>{ S.tset=+e.target.value; $("c-set-l").textContent=fmt(S.tset)+" °C"; savePrefs(); updateDash(); };
+$("c-rpm").oninput=e=>{ S.rpm=+e.target.value; $("c-rpm-l").textContent=S.rpm+" RPM"; savePrefs(); updateDash(); };
+$("c-load").onchange=e=>{ S.load=Math.max(1,+e.target.value||50); savePrefs(); updateDash(); };
+$("c-vol").onchange=e=>{ S.vol=Math.max(0.1,+e.target.value||1); savePrefs(); updateDash(); };
+$("b-feed").onclick=()=>{ S.feeds++; S.sim.events.push("methanol_5mL"); toast("5 mL methanol fed (#"+S.feeds+") — logged"); updateDash(); };
+document.querySelectorAll("#variant button").forEach(b=>b.onclick=()=>setVariant(b.dataset.v));
+function setVariant(v){
+  S.variant=v; if(v!=="CUSTOM"){ Object.assign(S,{seq:PRESET[v].seq,tm:PRESET[v].tm,dg:PRESET[v].dg,act:PRESET[v].act,rmsf:PRESET[v].rmsf}); }
+  document.querySelectorAll("#variant button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
+  fillMutator(); resetSim(); savePrefs();
+}
+
+// ---------------- mutator ----------------
+function clean(s){ return s.toUpperCase().replace(/[^A-Z]/g,""); }
+function analyse(seq){
+  const n=seq.length; if(!n) return null; let mw=18.0153,g=0,ch=0,cnt={};
+  for(const a of seq){ mw+=MASS[a]||0; g+=KD[a]||0; cnt[a]=(cnt[a]||0)+1; }
+  ch=(cnt.K||0)+(cnt.R||0)+0.1*(cnt.H||0)-(cnt.D||0)-(cnt.E||0);
+  const ali=((cnt.A||0)+2.9*(cnt.V||0)+3.9*((cnt.I||0)+(cnt.L||0)))/n*100;
+  return {n,mw,gravy:g/n,charge:ch,ali};
+}
+function diffVsWT(seq){
+  if(seq.length!==WT_SEQ.length) return "length differs from the "+WT_SEQ.length+"-aa wild-type fragment — no positional comparison";
+  const d=[]; for(let i=0;i<seq.length;i++) if(seq[i]!==WT_SEQ[i]) d.push(WT_SEQ[i]+(i+1)+seq[i]);
+  return d.length? d.join("  ")+"   ("+d.length+" changes)" : "none (identical to wild-type)";
+}
+function fillMutator(){
+  $("m-seq").value=S.seq; $("m-tm").value=S.tm; $("m-dg").value=S.dg; $("m-act").value=S.act; $("m-rmsf").value=S.rmsf; onSeq();
+}
+function onSeq(){
+  const raw=$("m-seq").value, seq=clean(raw), bad=[...new Set([...seq].filter(a=>!AA.includes(a)))];
+  $("m-warn").textContent = bad.length? "Non-standard letters: "+bad.join(", ")+" (ignored in mass/GRAVY)" : "";
+  const p=analyse(seq), el=$("m-props");
+  if(!p){ el.innerHTML=""; $("m-diff").textContent="–"; return; }
+  const box=(l,v,n)=>`<div class="m"><div class="l">${l}</div><div class="v mono" style="font-size:18px">${v}</div><div class="n">${n}</div></div>`;
+  el.innerHTML=box("Length",p.n+" aa","")+box("Mol. weight",fmt(p.mw/1000,3)+" kDa","average mass")+box("GRAVY",fmt(p.gravy,2),"Kyte–Doolittle")+box("Net charge pH 7",fmt(p.charge,1),"approx.")+box("Aliphatic index",fmt(p.ali,0),"thermostability proxy");
+  $("m-diff").textContent=diffVsWT(seq);
+}
+$("m-seq").oninput=()=>{ onSeq(); };
+function tmFlag(){ const tm=+$("m-tm").value, m=tm-S.tset; $("m-tm-flag").innerHTML = isFinite(m)? (m>=3?`<span class="ok">✓ Tm is ${fmt(m)} °C above the ${fmt(S.tset)} °C set-point</span>`: m>=0?`<span class="warn">⚠ Only ${fmt(m)} °C margin — expect activity loss over long runs</span>`:`<span class="bad">✗ Tm is ${fmt(-m)} °C below the set-point — enzyme will denature</span>`):""; }
+["m-tm","m-dg","m-act","m-rmsf"].forEach(id=>$(id).oninput=tmFlag);
+$("m-wt").onclick=()=>{ $("m-seq").value=WT_SEQ; $("m-tm").value=PRESET.WT.tm; $("m-dg").value=PRESET.WT.dg; $("m-act").value=PRESET.WT.act; $("m-rmsf").value=PRESET.WT.rmsf; onSeq(); tmFlag(); };
+$("m-mut").onclick=()=>{ $("m-seq").value=MUT_SEQ; $("m-tm").value=PRESET.MUT4.tm; $("m-dg").value=PRESET.MUT4.dg; $("m-act").value=PRESET.MUT4.act; $("m-rmsf").value=PRESET.MUT4.rmsf; onSeq(); tmFlag(); };
+$("m-use").onclick=()=>{ const seq=clean($("m-seq").value); if(seq.length<5) return toast("Enter a sequence first",true);
+  S.seq=seq; S.tm=+$("m-tm").value||S.tm; S.dg=+$("m-dg").value; S.act=Math.max(0,+$("m-act").value||1); S.rmsf=+$("m-rmsf").value; S.variant="CUSTOM";
+  document.querySelectorAll("#variant button").forEach(x=>x.classList.toggle("on",x.dataset.v==="CUSTOM")); resetSim(); savePrefs(); drawTm(); tmFlag(); toast("Custom variant loaded into reactor"); };
+$("m-file").onclick=()=>pickFile();
+
+// ---------------- scanner ----------------
+function buildResin(){ $("resin").innerHTML=RESINS.map(r=>`<button class="sec ${S.resin===r[0]?"on":""}" data-r="${r[0]}">♻${r[0]} ${r[1]}</button>`).join("");
+  document.querySelectorAll("#resin button").forEach(b=>b.onclick=()=>{ S.resin=+b.dataset.r; savePrefs(); buildResin(); scanOut(); }); }
+function scanOut(){
+  const w=+$("s-weight").value||0, dose=+$("s-dose").value||0; S.weight=w; S.dose=dose; savePrefs();
+  const r=RESINS.find(x=>x[0]===S.resin), el=$("scan-out");
+  if(S.resin!==1){ el.innerHTML=`<h3 class="warn">${r[1]} (♻${r[0]}) — not a PETase substrate</h3><div class="note">PETase-type enzymes hydrolyse the ester bonds of PET (♻1). ${r[1]} has no such bonds, so this enzyme will not break it down. Sort it into its own recycling stream.</div>`; return; }
+  const k=rateConst(S.tset,S.tm,S.act,S.rpm), thalf=k>0?Math.log(2)/k:Infinity;
+  const mg=w*dose, tpa=w*idealConv(24,S.tset,S.tm,S.act,S.rpm)/100*C.TPA/C.PET_UNIT;
+  el.innerHTML=`<h3 class="ok">PET (♻1) — suitable substrate</h3>
+  <div class="grid" style="margin-top:8px">
+   <div class="m"><div class="l">Half-conversion time</div><div class="v mono" style="font-size:18px">${isFinite(thalf)?fmt(thalf)+" h":"–"}</div><div class="n">at ${fmt(S.tset)} °C, ${S.rpm} RPM</div></div>
+   <div class="m"><div class="l">Enzyme needed</div><div class="v mono cy" style="font-size:18px">${fmt(mg,2)} mg</div><div class="n">${dose} mg/g × ${w} g</div></div>
+   <div class="m"><div class="l">24 h conversion</div><div class="v mono" style="font-size:18px">${fmt(idealConv(24,S.tset,S.tm,S.act,S.rpm))}%</div><div class="n">simulation</div></div>
+   <div class="m"><div class="l">TPA after 24 h</div><div class="v mono" style="font-size:18px">${fmt(tpa,1)} g</div><div class="n">+ ${fmt(w*idealConv(24,S.tset,S.tm,S.act,S.rpm)/100*62.07/C.PET_UNIT,1)} g ethylene glycol</div></div>
+  </div><div class="note" style="margin-top:8px">Real flakes are partly crystalline and usually need pre-treatment (milling, amorphisation); coloured/multi-layer packaging, caps and labels should be removed first.</div>`;
+}
+$("s-weight").oninput=scanOut; $("s-dose").oninput=scanOut;
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return $("cam-note").innerHTML='<span class="bad">Camera API not available here (needs HTTPS or the Android app).</span>';
+  try{ S.camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); const v=$("cam"); v.srcObject=S.camStream; await v.play(); $("b-snap").disabled=false; $("b-cam").textContent="Stop camera"; $("cam-note").textContent="Point at the ♻ number on the item, capture, then select the code below."; }
+  catch(e){ $("cam-note").innerHTML='<span class="bad">Camera blocked: '+e.name+'. Allow camera permission and retry.</span>'; }
+}
+function stopCam(){ if(S.camStream){ S.camStream.getTracks().forEach(t=>t.stop()); S.camStream=null; } $("b-snap").disabled=true; $("b-cam").textContent="📷 Start camera"; }
+$("b-cam").onclick=()=>S.camStream?stopCam():startCam();
+$("b-snap").onclick=()=>{ const v=$("cam"), c=$("snap"); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0); v.pause(); c.style.display="block"; v.style.display="none"; toast("Frame captured — confirm the ♻ code"); setTimeout(()=>{c.style.display="none";v.style.display="block";v.play&&v.play();},4000); };
+
+// ---------------- report / exports ----------------
+function summary(){
+  const s=S.sim, ideal=idealConv(24,S.tset,S.tm,S.act,S.rpm), live=s.t>=24?s.X:null, m=margin();
+  return {ideal,live,m,st:enzymeState()};
+}
+function configObj(){ return {device:"petase-reactor-01",mutant:S.variant==="CUSTOM"?"Custom":PRESET[S.variant].name,sequence:S.seq,tm_c:S.tm,setpoint_c:S.tset,heater:S.heater,stir_rpm:S.rpm,pet_load_g_per_l:S.load,volume_l:S.vol,dg_kcal_mol:S.dg,rmsf_angstrom:S.rmsf,relative_activity:S.act,sim_conversion_pct:+fmt(summary().ideal,2),timestamp:new Date().toISOString()}; }
+function reportText(){
+  const q=summary(), p=analyse(S.seq)||{mw:0,gravy:0};
+  return ["PETASE MUTANT — PIPELINE TELEMETRY (simulation)","-".repeat(40),
+   "Sequence (demo): "+S.seq, "Length / MW:     "+S.seq.length+" aa / "+fmt(p.mw/1000,2)+" kDa", "Tm (input):      "+fmt(S.tm,2)+" °C",
+   "Set-point:       "+fmt(S.tset)+" °C  (margin "+(q.m>=0?"+":"")+fmt(q.m)+" °C)", "Binding ΔG:      "+S.dg+" kcal/mol (input)","Avg RMSF:       "+S.rmsf+" Å (input)",
+   "24 h conversion: "+fmt(q.ideal,2)+" % (ideal)"+(q.live!=null?" / "+fmt(q.live,2)+" % (live run)":""),
+   "TPA @24 h:       "+fmt(tpaGrams(S.load,S.vol,q.ideal),2)+" g from "+fmt(S.load*S.vol,0)+" g PET",
+   "Status: "+q.st[0]+" — simulation only, needs wet-lab validation"].join("\n");
+}
+function renderReport(){
+  const q=summary(); $("t-rep").textContent=reportText(); $("t-sub").textContent=S.sim.log.length?("Live run: "+S.sim.log.length+" points logged"):"No live run yet — values are the ideal model";
+  $("t-badges").innerHTML=`<span class="pill ${q.m>=0?"":"off"}">${q.m>=0?"✓":"✗"} Tm ≥ set-point</span><span class="pill ${q.m>=3?"":"off"}">${q.m>=3?"✓":"!"} margin ≥ 3 °C</span><span class="pill">Pichia AOX1 plan</span>`;
+  const h=getHist(); $("hist").innerHTML=h.length? h.map(r=>`<div class="hist"><span>${r.when}<br>${r.name}</span><span class="mono">${r.set} °C · ${r.conv}%</span></div>`).join("") : "No saved runs yet.";
+}
+const getHist=()=>{ try{return JSON.parse(localStorage.getItem("petase.hist")||"[]");}catch(e){return [];} };
+$("x-fasta").onclick=()=>saveFile("PETase_variant.fasta","text/plain",`>${S.variant==="CUSTOM"?"Custom":PRESET[S.variant].name.replace(/ /g,"_")} | Tm=${S.tm}C | demo\n${S.seq}\n`);
+$("x-json").onclick=()=>saveFile("reactor_config.json","application/json",JSON.stringify(configObj(),null,2));
+$("x-csv").onclick=()=>{ let log=S.sim.log; if(!log.length){ log=[]; for(let h=0;h<=24;h++) log.push({h,T:S.tset,X:idealConv(h,S.tset,S.tm,S.act,S.rpm),rpm:S.rpm,heater:1,ev:""}); toast("No live run — exporting ideal curve"); }
+  saveFile("reactor_log.csv","text/csv","hour,temp_c,conversion_pct,tpa_g,stir_rpm,heater,event\n"+log.map(p=>[p.h,fmt(p.T,2),fmt(p.X,2),fmt(tpaGrams(S.load,S.vol,p.X),3),p.rpm,p.heater,p.ev].join(",")).join("\n")+"\n"); };
+$("x-share").onclick=async()=>{ const txt=reportText(); try{ if(navigator.share) await navigator.share({title:"PETase AI report",text:txt}); else { await navigator.clipboard.writeText(txt); toast("Report copied to clipboard"); } }catch(e){ if(e.name!=="AbortError") toast("Share failed: "+e.message,true); } };
+$("x-save").onclick=()=>{ const q=summary(),h=getHist(); h.unshift({when:new Date().toLocaleString(),name:S.variant==="CUSTOM"?"Custom":PRESET[S.variant].name,set:fmt(S.tset),conv:fmt(S.sim.t>=24?S.sim.X:q.ideal)}); try{localStorage.setItem("petase.hist",JSON.stringify(h.slice(0,20)));}catch(e){} renderReport(); toast("Run saved on this device"); };
+$("x-import").onclick=()=>pickFile();
+
+// ---------------- import ----------------
+function pickFile(){ $("file").value=""; $("file").click(); }
+$("file").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const txt=await f.text(), n=f.name.toLowerCase();
+  try{
+    if(n.endsWith(".json")){ const j=JSON.parse(txt); if(j.sequence){S.seq=clean(j.sequence);} if(j.tm_c!=null)S.tm=+j.tm_c; if(j.setpoint_c!=null)S.tset=+j.setpoint_c; if(j.stir_rpm!=null)S.rpm=+j.stir_rpm; if(j.pet_load_g_per_l!=null)S.load=+j.pet_load_g_per_l; if(j.volume_l!=null)S.vol=+j.volume_l; if(j.dg_kcal_mol!=null)S.dg=+j.dg_kcal_mol; if(j.rmsf_angstrom!=null)S.rmsf=+j.rmsf_angstrom; if(j.relative_activity!=null)S.act=+j.relative_activity; if(j.heater!=null)S.heater=!!j.heater;
+      S.variant="CUSTOM"; syncControls(); setVariant("CUSTOM"); toast("Config loaded: "+f.name); }
+    else if(n.endsWith(".csv")){ const rows=txt.trim().split(/\r?\n/).slice(1).map(r=>r.split(",")); S.imported=rows.map(r=>[+r[0],+r[2]]).filter(p=>isFinite(p[0])&&isFinite(p[1])); drawChart(); toast("CSV overlay: "+S.imported.length+" points"); }
+    else { const lines=txt.split(/\r?\n/), recs=[]; let cur=null; lines.forEach(l=>{ if(l.startsWith(">")){ cur={h:l.slice(1),s:""}; recs.push(cur);} else if(cur) cur.s+=l.trim(); });
+      if(!recs.length) throw new Error("no FASTA records"); const r=recs[recs.length>1?1:0]; $("m-seq").value=clean(r.s); const tm=/Tm=([\d.]+)/.exec(r.h); if(tm)$("m-tm").value=tm[1]; onSeq(); tmFlag(); toast("Loaded "+recs.length+" record(s); using \""+r.h.split("|")[0].trim()+"\""); document.querySelector('nav [data-t=mut]').click(); }
+  }catch(err){ toast("Could not read file: "+err.message,true); }
+};
+
+// ---------------- IoT push ----------------
+window.__nativeCb=(id,code,body)=>{ const ok=code>=200&&code<300; $("iot-out").innerHTML=ok?`<span class="ok">✓ ${code} — ${String(body).slice(0,120)}</span>`:`<span class="bad">✗ ${code||"no response"} ${String(body).slice(0,120)}</span>`; toast(ok?"Config delivered":"Push failed",!ok); };
+$("x-push").onclick=async()=>{ const url=$("iot-url").value.trim(); S.url=url; savePrefs(); if(!/^https?:\/\//.test(url)) return toast("Enter a device URL (http://…)",true);
+  const body=JSON.stringify(configObj()); $("iot-out").textContent="Sending…";
+  if(native){ window.AndroidBridge.postJson(url,body,"push"); return; }
+  try{ const ctl=new AbortController(); setTimeout(()=>ctl.abort(),6000); const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body,signal:ctl.signal}); window.__nativeCb("push",r.status,await r.text()); }
+  catch(e){ $("iot-out").innerHTML='<span class="bad">✗ '+e.message+' — device unreachable, blocked by CORS/mixed-content, or offline. Use the Android app for plain-HTTP LAN devices.</span>'; toast("Push failed",true); } };
+
+// ---------------- init ----------------
+function syncControls(){ $("c-heat").checked=S.heater; $("c-set").value=S.tset; $("c-set-l").textContent=fmt(S.tset)+" °C"; $("c-rpm").value=S.rpm; $("c-rpm-l").textContent=S.rpm+" RPM"; $("c-load").value=S.load; $("c-vol").value=S.vol; $("s-weight").value=S.weight; $("s-dose").value=S.dose; $("iot-url").value=S.url||"";
+  document.querySelectorAll("#variant button").forEach(x=>x.classList.toggle("on",x.dataset.v===S.variant)); document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",+x.dataset.s===S.speed)); }
+loadPrefs(); if(S.variant!=="CUSTOM"){ Object.assign(S,{seq:PRESET[S.variant].seq,tm:PRESET[S.variant].tm,dg:PRESET[S.variant].dg,act:PRESET[S.variant].act,rmsf:PRESET[S.variant].rmsf}); }
+syncControls(); buildResin(); fillMutator(); tmFlag(); scanOut(); updateDash(); renderReport();
+window.addEventListener("resize",()=>{drawChart();drawTm();});
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+window.__test={S,step,resetSim,idealConv,analyse,diffVsWT,rateConst};
+</script>
+</body>
+</html>

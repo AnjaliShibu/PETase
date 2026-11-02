@@ -1,0 +1,32 @@
+name: Build PETase AI APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+      - name: Sync web app into the Android assets
+        run: cp index.html android-app/app/src/main/assets/index.html
+      - name: Build debug APK
+        working-directory: android-app
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - name: Align, sign (v1-v3 + v4 .idsig)
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          mkdir -p dist
+          keytool -genkeypair -keystore ks.jks -storepass petase123 -keypass petase123 \
+            -alias petase -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=PETase AI Hackathon"
+          "$BT/zipalign" -f -p 4 android-app/app/build/outputs/apk/debug/app-debug.apk dist/aligned.apk
+          "$BT/apksigner" sign --ks ks.jks --ks-pass pass:petase123 --key-pass pass:petase123 \
+            --ks-key-alias petase --v4-signing-enabled true --out dist/petase-ai.apk dist/aligned.apk
+          rm dist/aligned.apk
+          "$BT/apksigner" verify --verbose dist/petase-ai.apk
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with: { name: petase-ai-apk, path: dist/* }
