@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: Sync web app into the Android assets
         run: cp index.html android-app/app/src/main/assets/index.html
       - name: Build debug APK
